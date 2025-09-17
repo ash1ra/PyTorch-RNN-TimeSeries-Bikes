@@ -1,0 +1,67 @@
+from pathlib import Path
+
+import kagglehub
+import numpy as np
+import pandas as pd
+
+path = Path(kagglehub.dataset_download("marklvl/bike-sharing-dataset"))
+
+df = pd.read_csv(path / "day.csv")
+
+df.rename(
+    columns={
+        "dteday": "date",
+        "yr": "year",
+        "mnth": "month",
+        "holiday": "is_holiday",
+        "weekday": "day_of_week",
+        "workingday": "is_working_day",
+        "weathersit": "weather",
+        "atemp": "feeling_temp",
+        "cnt": "count",
+    },
+    inplace=True,
+)
+
+df["season"] = pd.Categorical(df["season"], categories=[1, 2, 3, 4], ordered=False)
+df["year"] = pd.Categorical(df["year"], categories=[0, 1], ordered=False)
+df["month"] = pd.Categorical(
+    df["month"], categories=[i for i in range(1, 13)], ordered=False
+)
+df["is_holiday"] = pd.Categorical(df["is_holiday"], categories=[0, 1], ordered=False)
+df["day_of_week"] = pd.Categorical(
+    df["day_of_week"], categories=[i for i in range(7)], ordered=False
+)
+df["is_working_day"] = pd.Categorical(
+    df["is_working_day"], categories=[0, 1], ordered=False
+)
+df["weather"] = pd.Categorical(df["weather"], categories=[1, 2, 3], ordered=False)
+
+df["casual"] = np.log(df["casual"])
+df["registered"] = np.log(df["registered"])
+df["count"] = np.log(df["count"])
+
+df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
+df = df.sort_values("date")
+
+df["day"] = df["date"].dt.day
+df["day"] = df["day"] / df["day"].max()
+
+columns_to_export = [
+    "year",
+    "month",
+    "day",
+    "day_of_week",
+    "is_holiday",
+    "is_working_day",
+    "season",
+    "weather",
+    "temp",
+    "feeling_temp",
+    "hum",
+    "windspeed",
+    "count",
+]
+df[columns_to_export].to_csv(path / "formatted_day.csv", index=False)
+
+formatted_df = pd.read_csv(path / "formatted_day.csv")
