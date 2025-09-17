@@ -1,12 +1,10 @@
 from pathlib import Path
 
-import kagglehub
 import numpy as np
 import pandas as pd
 
-path = Path(kagglehub.dataset_download("marklvl/bike-sharing-dataset"))
-
-df = pd.read_csv(path / "day.csv")
+path = Path("data")
+df = pd.read_csv(path / "data.csv")
 
 df.rename(
     columns={
@@ -62,6 +60,5 @@ columns_to_export = [
     "windspeed",
     "count",
 ]
-df[columns_to_export].to_csv(path / "formatted_day.csv", index=False)
 
-formatted_df = pd.read_csv(path / "formatted_day.csv")
+df[columns_to_export].to_csv(path / "processed_data.csv", index=False)
