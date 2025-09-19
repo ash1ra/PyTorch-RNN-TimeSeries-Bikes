@@ -21,6 +21,12 @@ df.rename(
     inplace=True,
 )
 
+df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
+df = df.sort_values("date")
+
+df["day"] = df["date"].dt.day
+df["day"] = df["day"] / df["day"].max()
+
 df["season"] = pd.Categorical(df["season"], categories=[1, 2, 3, 4], ordered=False)
 df["year"] = pd.Categorical(df["year"], categories=[0, 1], ordered=False)
 df["month"] = pd.Categorical(
@@ -35,15 +41,17 @@ df["is_working_day"] = pd.Categorical(
 )
 df["weather"] = pd.Categorical(df["weather"], categories=[1, 2, 3], ordered=False)
 
+df.loc[df["date"] == pd.to_datetime("2012-10-29"), "count"] = (
+    df["count"]
+    .rolling(window=7, center=True)
+    .mean()
+    .loc[df["date"] == pd.to_datetime("2012-10-29")]
+    .astype(int)
+)
+
 df["casual"] = np.log(df["casual"])
 df["registered"] = np.log(df["registered"])
 df["count"] = np.log(df["count"])
-
-df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
-df = df.sort_values("date")
-
-df["day"] = df["date"].dt.day
-df["day"] = df["day"] / df["day"].max()
 
 columns_to_export = [
     "year",
