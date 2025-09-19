@@ -19,11 +19,11 @@ def main() -> None:
     )
 
     input_size = train_dl.dataset.data[0].size
-    rnn_model = RNNModel(input_size, 1, 1)
+    rnn_model = RNNModel(input_size, 64, 1, 2)
 
     epochs = 100
     loss_fn = nn.MSELoss()
-    optimizer = optim.SGD(rnn_model.parameters(), lr=0.1)
+    optimizer = optim.SGD(rnn_model.parameters(), lr=0.01)
 
     train(rnn_model, train_dl, val_dl, loss_fn, mape_metric, optimizer, epochs)
     test(rnn_model, test_dl, loss_fn, mape_metric)
