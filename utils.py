@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -78,8 +79,14 @@ def train(
     metric_fn: Callable,
     optimizer: optim.Optimizer,
     epochs: int,
+    patience: int = 10,
+    min_delta: float = 0.0,
     device: str = "cpu",
 ) -> None:
+    best_val_loss = float("inf")
+    patience_counter = 0
+    temp_state_dict_path = Path("data/temp_best_state_dict.pt")
+
     for epoch in range(1, epochs + 1):
         train_loss, train_metric = train_step(
             model, train_dl, loss_fn, metric_fn, optimizer, device
@@ -89,6 +96,23 @@ def train(
         print(
             f"Epoch: {epoch} | Train loss: {train_loss:.2f} | Train {metric_fn.__name__}: {train_metric:.2f}% | Val loss: {val_loss:.2f} | Val {metric_fn.__name__}: {val_metric:.2f}%"
         )
+
+        if val_loss < best_val_loss - min_delta:
+            best_val_loss = val_loss
+            torch.save(model.state_dict(), temp_state_dict_path)
+            patience_counter = 0
+        else:
+            patience_counter += 1
+
+        if patience_counter >= patience:
+            print(f"Early stopping triggered after {epoch} epochs")
+            break
+
+    if best_val_loss < val_loss:
+        model.load_state_dict(torch.load(temp_state_dict_path))
+        print(f"Loaded best model parameters with val_loss={best_val_loss:.4f}")
+
+    Path(temp_state_dict_path).unlink(missing_ok=True)
 
 
 def test(
