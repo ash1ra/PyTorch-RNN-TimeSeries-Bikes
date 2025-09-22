@@ -24,10 +24,14 @@ def train_step(
     train_loss, train_metric = 0, 0
     model.train()
 
-    for inputs, targets in train_dl:
-        inputs, targets = inputs.to(device), targets.to(device)
+    for cat_inputs, num_inputs, targets in train_dl:
+        cat_inputs, num_inputs, targets = (
+            cat_inputs.to(device),
+            num_inputs.to(device),
+            targets.to(device),
+        )
 
-        preds = model(inputs)
+        preds = model(cat_inputs, num_inputs)
 
         loss = loss_fn(preds, targets)
 
@@ -55,10 +59,14 @@ def test_step(
     model.eval()
 
     with torch.inference_mode():
-        for inputs, targets in test_dl:
-            inputs, targets = inputs.to(device), targets.to(device)
+        for cat_inputs, num_inputs, targets in test_dl:
+            cat_inputs, num_inputs, targets = (
+                cat_inputs.to(device),
+                num_inputs.to(device),
+                targets.to(device),
+            )
 
-            preds = model(inputs)
+            preds = model(cat_inputs, num_inputs)
 
             loss = loss_fn(preds, targets)
 

@@ -41,6 +41,14 @@ df["is_working_day"] = pd.Categorical(
 )
 df["weather"] = pd.Categorical(df["weather"], categories=[1, 2, 3], ordered=False)
 
+df["season"] = df["season"].cat.codes
+df["year"] = df["year"].cat.codes
+df["month"] = df["month"].cat.codes
+df["is_holiday"] = df["is_holiday"].cat.codes
+df["day_of_week"] = df["day_of_week"].cat.codes
+df["is_working_day"] = df["is_working_day"].cat.codes
+df["weather"] = df["weather"].cat.codes
+
 df.loc[df["date"] == pd.to_datetime("2012-10-29"), "count"] = (
     df["count"]
     .rolling(window=7, center=True)

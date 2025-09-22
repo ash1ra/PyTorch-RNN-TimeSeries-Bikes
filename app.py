@@ -18,13 +18,21 @@ def main() -> None:
         train_ds_path, val_ds_path, test_ds_path, 32
     )
 
-    input_size = train_dl.dataset.data[0].size
-    rnn_model = RNNModel(input_size, 64, 1, 2)
+    # input_size = train_dl.dataset.data[0].size
+    cat_sizes = [2, 12, 7, 2, 2, 4, 3]
+    rnn_model = RNNModel(
+        cat_sizes,
+        embed_dim=4,
+        num_size=5,
+        hidden_size=64,
+        output_size=1,
+        num_layers=2,
+    )
 
     loss_fn = nn.MSELoss()
     optimizer = optim.Adam(rnn_model.parameters(), lr=0.001)
     epochs = 100
-    patience = 20
+    patience = 50
     min_delta = 0.0
 
     train(

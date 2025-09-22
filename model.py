@@ -5,7 +5,9 @@ from torch import nn
 class RNNModel(nn.Module):
     def __init__(
         self,
-        input_size: int,
+        cat_sizes: list[int],
+        embed_dim: int,
+        num_size: int,
         hidden_size: int,
         output_size: int,
         num_layers: int = 1,
@@ -14,6 +16,12 @@ class RNNModel(nn.Module):
 
         self.hidden_size = hidden_size
         self.num_layers = num_layers
+        self.num_cats = len(cat_sizes)
+
+        self.embeddings = nn.ModuleList(
+            [nn.Embedding(size, embed_dim) for size in cat_sizes]
+        )
+        input_size = (self.num_cats * embed_dim) + num_size
 
         self.rnn = nn.RNN(
             input_size=input_size,
@@ -23,10 +31,18 @@ class RNNModel(nn.Module):
         )
         self.linear = nn.Linear(self.hidden_size, output_size)
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, cat_x: torch.Tensor, num_x: torch.Tensor):
+        embedded = []
+        for i in range(self.num_cats):
+            emb = self.embeddings[i](cat_x[:, :, i])
+            embedded.append(emb)
+
+        embedded_cat = torch.cat(embedded, dim=-1)
+        x = torch.cat([embedded_cat, num_x], dim=-1)
+
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
 
         out, _ = self.rnn(x, h0)
-        out = self.linear(out[:, -1, :]).squeeze()
+        out = self.linear(out[:, -1, :]).squeeze(1)
 
         return out

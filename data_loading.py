@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
-
+import numpy as np
 
 TRAIN_RATIO = 0.7
 VAL_RATIO = 0.15
@@ -14,19 +14,24 @@ class TimeSeriesDataset(Dataset):
         self,
         data: pd.DataFrame,
         target_col: str,
-        feature_cols: list[str],
+        cat_cols: list[str],
+        num_cols: list[str],
         seq_length: int,
     ) -> None:
-        self.data = data[feature_cols].values
-        self.targets = data[target_col].values
+        self.cat_data = data[cat_cols].values.astype(np.int64)
+        self.num_data = data[num_cols].values.astype(np.float32)
+        self.targets = data[target_col].values.astype(np.float32)
         self.seq_length = seq_length
 
     def __len__(self) -> int:
-        return len(self.data) - self.seq_length
+        return len(self.num_data) - self.seq_length
 
-    def __getitem__(self, idx) -> tuple[torch.Tensor]:
+    def __getitem__(self, idx) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         return (
-            torch.tensor(self.data[idx : idx + self.seq_length], dtype=torch.float32),
+            torch.tensor(self.cat_data[idx : idx + self.seq_length], dtype=torch.int64),
+            torch.tensor(
+                self.num_data[idx : idx + self.seq_length], dtype=torch.float32
+            ),
             torch.tensor(self.targets[idx + self.seq_length], dtype=torch.float32),
         )
 
@@ -76,10 +81,19 @@ df = pd.read_csv(path / "processed_data.csv")
 train_df, val_df, test_df = split_data(df)
 
 target_col = "count"
-feature_cols = df.drop(target_col, axis=1).columns
+cat_cols = [
+    "year",
+    "month",
+    "day_of_week",
+    "is_holiday",
+    "is_working_day",
+    "season",
+    "weather",
+]
+num_cols = ["day", "temp", "feeling_temp", "hum", "windspeed"]
 
-train_ds = TimeSeriesDataset(train_df, target_col, feature_cols, 3)
-val_ds = TimeSeriesDataset(val_df, target_col, feature_cols, 3)
-test_ds = TimeSeriesDataset(test_df, target_col, feature_cols, 3)
+train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 7)
+val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 7)
+test_ds = TimeSeriesDataset(test_df, target_col, cat_cols, num_cols, 7)
 
 save_datasets("data", train_ds, val_ds, test_ds)
