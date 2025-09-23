@@ -4,7 +4,7 @@ from torch import nn, optim
 
 from data_loading import get_dataloaders
 from model import RNNModel
-from utils import test, train, mape_metric
+from utils import test, train, mape_metric, plot_preds_vs_targets
 
 
 def main() -> None:
@@ -31,11 +31,11 @@ def main() -> None:
 
     loss_fn = nn.MSELoss()
     optimizer = optim.Adam(rnn_model.parameters(), lr=0.001)
-    epochs = 100
-    patience = 50
+    epochs = 500
+    patience = 100
     min_delta = 0.0
 
-    train(
+    train_preds, train_targets, val_preds, val_targets = train(
         rnn_model,
         train_dl,
         val_dl,
@@ -46,7 +46,12 @@ def main() -> None:
         patience,
         min_delta,
     )
-    test(rnn_model, test_dl, loss_fn, mape_metric)
+
+    plot_preds_vs_targets(train_preds, train_targets, "Train preds vs targets")
+    plot_preds_vs_targets(val_preds, val_targets, "Validation preds vs targets")
+
+    test_preds, test_targets = test(rnn_model, test_dl, loss_fn, mape_metric)
+    plot_preds_vs_targets(test_preds, test_targets, "Test preds vs targets")
 
 
 if __name__ == "__main__":

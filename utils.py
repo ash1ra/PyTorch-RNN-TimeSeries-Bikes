@@ -1,9 +1,11 @@
 from collections.abc import Callable
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import nn, optim
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 
 
@@ -13,6 +15,23 @@ def mape_metric(preds, targets):
     return np.mean(np.abs((targets - preds) / targets)) * 100
 
 
+def plot_preds_vs_targets(
+    preds: list[np.ndarray], targets: list[np.ndarray], title: str
+) -> None:
+    preds = np.exp(np.concatenate(preds))
+    targets = np.exp(np.concatenate(targets))
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(preds, label="Predictions", color="red", alpha=0.7)
+    plt.plot(targets, label="Targets", color="blue", alpha=0.7)
+    plt.xlabel("Days")
+    plt.ylabel("Count")
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
 def train_step(
     model: nn.Module,
     train_dl: DataLoader,
@@ -20,8 +39,11 @@ def train_step(
     metric_fn: Callable,
     optimizer: optim.Optimizer,
     device: str = "cpu",
-) -> tuple[float]:
+) -> tuple[float, float, list, list]:
     train_loss, train_metric = 0, 0
+    train_preds = []
+    train_targets = []
+
     model.train()
 
     for cat_inputs, num_inputs, targets in train_dl:
@@ -32,6 +54,9 @@ def train_step(
         )
 
         preds = model(cat_inputs, num_inputs)
+
+        train_preds.append(preds.detach().cpu().numpy())
+        train_targets.append(targets.detach().cpu().numpy())
 
         loss = loss_fn(preds, targets)
 
@@ -45,7 +70,7 @@ def train_step(
     train_loss /= len(train_dl)
     train_metric /= len(train_dl)
 
-    return train_loss, train_metric
+    return train_loss, train_metric, train_preds, train_targets
 
 
 def test_step(
@@ -54,8 +79,11 @@ def test_step(
     loss_fn: nn.Module,
     metric_fn: Callable,
     device: str = "cpu",
-) -> tuple[float]:
+) -> tuple[float, float, list, list]:
     test_loss, test_metric = 0, 0
+    test_preds = []
+    test_targets = []
+
     model.eval()
 
     with torch.inference_mode():
@@ -68,6 +96,9 @@ def test_step(
 
             preds = model(cat_inputs, num_inputs)
 
+            test_preds.append(preds.detach().cpu().numpy())
+            test_targets.append(targets.detach().cpu().numpy())
+
             loss = loss_fn(preds, targets)
 
             test_loss += loss.item()
@@ -76,7 +107,7 @@ def test_step(
     test_loss /= len(test_dl)
     test_metric /= len(test_dl)
 
-    return test_loss, test_metric
+    return test_loss, test_metric, test_preds, test_targets
 
 
 def train(
@@ -90,16 +121,28 @@ def train(
     patience: int = 10,
     min_delta: float = 0.0,
     device: str = "cpu",
-) -> None:
+) -> tuple[list, list, list, list]:
+    scheduler = ReduceLROnPlateau(
+        optimizer,
+        mode="min",
+        factor=0.5,
+        patience=50,
+        min_lr=1e-6,
+    )
     best_val_loss = float("inf")
     patience_counter = 0
     temp_state_dict_path = Path("data/temp_best_state_dict.pt")
 
     for epoch in range(1, epochs + 1):
-        train_loss, train_metric = train_step(
+        train_loss, train_metric, train_preds, train_targets = train_step(
             model, train_dl, loss_fn, metric_fn, optimizer, device
         )
-        val_loss, val_metric = test_step(model, val_dl, loss_fn, metric_fn, device)
+        val_loss, val_metric, val_preds, val_targets = test_step(
+            model, val_dl, loss_fn, metric_fn, device
+        )
+
+        scheduler.step(val_loss)
+        print(optimizer.param_groups[0]["lr"])
 
         print(
             f"Epoch: {epoch} | Train loss: {train_loss:.2f} | Train {metric_fn.__name__}: {train_metric:.2f}% | Val loss: {val_loss:.2f} | Val {metric_fn.__name__}: {val_metric:.2f}%"
@@ -122,6 +165,8 @@ def train(
 
     Path(temp_state_dict_path).unlink(missing_ok=True)
 
+    return train_preds, train_targets, val_preds, val_targets
+
 
 def test(
     model: nn.Module,
@@ -129,6 +174,10 @@ def test(
     loss_fn: nn.Module,
     metric_fn: Callable,
     device: str = "cpu",
-) -> None:
-    test_loss, test_metric = test_step(model, data_loader, loss_fn, metric_fn, device)
+) -> tuple[list, list]:
+    test_loss, test_metric, test_preds, test_targets = test_step(
+        model, data_loader, loss_fn, metric_fn, device
+    )
     print(f"Test loss: {test_loss:.2f} | Test {metric_fn.__name__}: {test_metric:.2f}%")
+
+    return test_preds, test_targets
