@@ -2,12 +2,18 @@ from pathlib import Path
 
 from torch import nn, optim
 
+import torch
 from data_loading import get_dataloaders
 from model import RNNModel
 from utils import test, train, mape_metric, plot_preds_vs_targets, plot_loss
 
 
 def main() -> None:
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    if device == "cuda":
+        torch.backends.cudnn.benchmark = True
+
     path = Path("data")
 
     train_ds_path = path / "train_ds.pt"
@@ -22,12 +28,12 @@ def main() -> None:
     cat_sizes = [2, 12, 7, 2, 2, 4, 3]
     rnn_model = RNNModel(
         cat_sizes,
-        embed_dim=4,
+        embed_dim=8,
         num_size=5,
         hidden_size=64,
         output_size=1,
         num_layers=2,
-    )
+    ).to(device)
 
     loss_fn = nn.MSELoss()
     optimizer = optim.Adam(rnn_model.parameters(), lr=0.001)
@@ -45,6 +51,7 @@ def main() -> None:
         epochs,
         patience,
         min_delta,
+        device,
     )
 
     plot_loss(train_results["loss"], val_results["loss"])
@@ -56,7 +63,7 @@ def main() -> None:
         val_results["preds"], val_results["targets"], "Validation preds vs targets"
     )
 
-    test_results = test(rnn_model, test_dl, loss_fn, mape_metric)
+    test_results = test(rnn_model, test_dl, loss_fn, mape_metric, device)
     plot_preds_vs_targets(
         test_results["preds"], test_results["targets"], "Test preds vs targets"
     )

@@ -11,6 +11,7 @@ class RNNModel(nn.Module):
         hidden_size: int,
         output_size: int,
         num_layers: int = 1,
+        dropout: float = 0.0,
     ) -> None:
         super().__init__()
 
@@ -28,6 +29,7 @@ class RNNModel(nn.Module):
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
             batch_first=True,
+            dropout=dropout if num_layers > 1 else 0.0,
         )
         self.linear = nn.Linear(self.hidden_size, output_size)
 
@@ -40,8 +42,10 @@ class RNNModel(nn.Module):
         embedded_cat = torch.cat(embedded, dim=-1)
         x = torch.cat([embedded_cat, num_x], dim=-1)
 
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        # c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        device = x.device
+
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size, device=device)
+        # c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size, device=device)
 
         out, _ = self.rnn(x, h0)
         out = self.linear(out[:, -1, :]).squeeze(1)

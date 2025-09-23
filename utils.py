@@ -199,7 +199,7 @@ def train(
             break
 
     if best_val_loss < val_loss:
-        model.load_state_dict(torch.load(temp_state_dict_path))
+        model.load_state_dict(torch.load(temp_state_dict_path, map_location=device))
         print(f"Loaded best model parameters with val_loss={best_val_loss:.4f}")
 
     Path(temp_state_dict_path).unlink(missing_ok=True)
