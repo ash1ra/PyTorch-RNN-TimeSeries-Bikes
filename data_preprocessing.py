@@ -51,7 +51,7 @@ df["weather"] = df["weather"].cat.codes
 
 df.loc[df["date"] == pd.to_datetime("2012-10-29"), "count"] = (
     df["count"]
-    .rolling(window=7, center=True)
+    .rolling(window=2, center=True)
     .mean()
     .loc[df["date"] == pd.to_datetime("2012-10-29")]
     .astype(int)

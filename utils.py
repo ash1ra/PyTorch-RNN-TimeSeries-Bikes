@@ -32,6 +32,28 @@ def plot_preds_vs_targets(
     plt.show()
 
 
+def plot_loss(train_loss_list: list[float], val_loss_list: list[float]) -> None:
+    epochs = list(range(1, len(train_loss_list) + 1))
+
+    fig, axs = plt.subplots(1, 2, figsize=(14, 6))
+
+    axs[0].plot(epochs, train_loss_list, label="Train loss")
+    axs[0].set_xlabel("Epochs")
+    axs[0].set_ylabel("Loss (MSE)")
+    axs[0].legend()
+    axs[0].grid(True)
+
+    axs[1].plot(epochs, val_loss_list, label="Validation loss")
+    axs[1].set_xlabel("Epochs")
+    axs[1].set_ylabel("Loss (MSE)")
+    axs[1].legend()
+    axs[1].grid(True)
+
+    fig.suptitle("Train and validation losses")
+    plt.tight_layout()
+    plt.show()
+
+
 def train_step(
     model: nn.Module,
     train_dl: DataLoader,
@@ -41,8 +63,7 @@ def train_step(
     device: str = "cpu",
 ) -> tuple[float, float, list, list]:
     train_loss, train_metric = 0, 0
-    train_preds = []
-    train_targets = []
+    train_preds, train_targets = [], []
 
     model.train()
 
@@ -121,7 +142,23 @@ def train(
     patience: int = 10,
     min_delta: float = 0.0,
     device: str = "cpu",
-) -> tuple[list, list, list, list]:
+) -> tuple[dict[str, list], dict[str, list]]:
+    train_results = {
+        "loss": [],
+        "metric": [],
+        "preds": [],
+        "targets": [],
+    }
+    val_results = {
+        "loss": [],
+        "metric": [],
+        "preds": [],
+        "targets": [],
+    }
+    best_val_loss = float("inf")
+    patience_counter = 0
+    temp_state_dict_path = Path("data/temp_best_state_dict.pt")
+
     scheduler = ReduceLROnPlateau(
         optimizer,
         mode="min",
@@ -129,9 +166,6 @@ def train(
         patience=50,
         min_lr=1e-6,
     )
-    best_val_loss = float("inf")
-    patience_counter = 0
-    temp_state_dict_path = Path("data/temp_best_state_dict.pt")
 
     for epoch in range(1, epochs + 1):
         train_loss, train_metric, train_preds, train_targets = train_step(
@@ -141,8 +175,13 @@ def train(
             model, val_dl, loss_fn, metric_fn, device
         )
 
+        train_results["loss"].append(train_loss)
+        train_results["metric"].append(train_metric)
+
+        val_results["loss"].append(val_loss)
+        val_results["metric"].append(val_metric)
+
         scheduler.step(val_loss)
-        print(optimizer.param_groups[0]["lr"])
 
         print(
             f"Epoch: {epoch} | Train loss: {train_loss:.2f} | Train {metric_fn.__name__}: {train_metric:.2f}% | Val loss: {val_loss:.2f} | Val {metric_fn.__name__}: {val_metric:.2f}%"
@@ -165,7 +204,14 @@ def train(
 
     Path(temp_state_dict_path).unlink(missing_ok=True)
 
-    return train_preds, train_targets, val_preds, val_targets
+    _, _, train_results["preds"], train_results["targets"] = test_step(
+        model, train_dl, loss_fn, metric_fn, device
+    )
+    _, _, val_results["preds"], val_results["targets"] = test_step(
+        model, val_dl, loss_fn, metric_fn, device
+    )
+
+    return train_results, val_results
 
 
 def test(
@@ -174,10 +220,15 @@ def test(
     loss_fn: nn.Module,
     metric_fn: Callable,
     device: str = "cpu",
-) -> tuple[list, list]:
+) -> dict[str, list]:
     test_loss, test_metric, test_preds, test_targets = test_step(
         model, data_loader, loss_fn, metric_fn, device
     )
     print(f"Test loss: {test_loss:.2f} | Test {metric_fn.__name__}: {test_metric:.2f}%")
 
-    return test_preds, test_targets
+    return {
+        "loss": test_loss,
+        "metric": test_metric,
+        "preds": test_preds,
+        "targets": test_targets,
+    }

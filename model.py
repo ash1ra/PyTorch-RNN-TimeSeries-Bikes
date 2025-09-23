@@ -41,6 +41,7 @@ class RNNModel(nn.Module):
         x = torch.cat([embedded_cat, num_x], dim=-1)
 
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        # c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
 
         out, _ = self.rnn(x, h0)
         out = self.linear(out[:, -1, :]).squeeze(1)

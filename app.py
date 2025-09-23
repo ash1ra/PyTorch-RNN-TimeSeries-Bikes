@@ -4,7 +4,7 @@ from torch import nn, optim
 
 from data_loading import get_dataloaders
 from model import RNNModel
-from utils import test, train, mape_metric, plot_preds_vs_targets
+from utils import test, train, mape_metric, plot_preds_vs_targets, plot_loss
 
 
 def main() -> None:
@@ -35,7 +35,7 @@ def main() -> None:
     patience = 100
     min_delta = 0.0
 
-    train_preds, train_targets, val_preds, val_targets = train(
+    train_results, val_results = train(
         rnn_model,
         train_dl,
         val_dl,
@@ -47,11 +47,19 @@ def main() -> None:
         min_delta,
     )
 
-    plot_preds_vs_targets(train_preds, train_targets, "Train preds vs targets")
-    plot_preds_vs_targets(val_preds, val_targets, "Validation preds vs targets")
+    plot_loss(train_results["loss"], val_results["loss"])
 
-    test_preds, test_targets = test(rnn_model, test_dl, loss_fn, mape_metric)
-    plot_preds_vs_targets(test_preds, test_targets, "Test preds vs targets")
+    plot_preds_vs_targets(
+        train_results["preds"], train_results["targets"], "Train preds vs targets"
+    )
+    plot_preds_vs_targets(
+        val_results["preds"], val_results["targets"], "Validation preds vs targets"
+    )
+
+    test_results = test(rnn_model, test_dl, loss_fn, mape_metric)
+    plot_preds_vs_targets(
+        test_results["preds"], test_results["targets"], "Test preds vs targets"
+    )
 
 
 if __name__ == "__main__":
