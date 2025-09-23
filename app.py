@@ -1,11 +1,12 @@
 from pathlib import Path
 
-from torch import nn, optim
-
 import torch
+from torch import nn, optim
+from torchmetrics.functional import r2_score
+
 from data_loading import get_dataloaders
 from model import RNNModel
-from utils import test, train, mape_metric, plot_preds_vs_targets, plot_loss
+from utils import plot_loss, plot_preds_vs_targets, test, train
 
 
 def main() -> None:
@@ -46,7 +47,7 @@ def main() -> None:
         train_dl,
         val_dl,
         loss_fn,
-        mape_metric,
+        r2_score,
         optimizer,
         epochs,
         patience,
@@ -63,7 +64,7 @@ def main() -> None:
         val_results["preds"], val_results["targets"], "Validation preds vs targets"
     )
 
-    test_results = test(rnn_model, test_dl, loss_fn, mape_metric, device)
+    test_results = test(rnn_model, test_dl, loss_fn, r2_score, device)
     plot_preds_vs_targets(
         test_results["preds"], test_results["targets"], "Test preds vs targets"
     )

@@ -36,7 +36,7 @@ class TimeSeriesDataset(Dataset):
         )
 
 
-def split_data(data: pd.DataFrame) -> tuple[pd.DataFrame]:
+def split_data(data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     total_size = len(data)
     train_size = int(TRAIN_RATIO * total_size)
     val_size = int(VAL_RATIO * total_size)
@@ -63,7 +63,7 @@ def save_datasets(
 
 def get_dataloaders(
     train_ds_path, val_ds_path, test_ds_path, batch_size
-) -> tuple[DataLoader]:
+) -> tuple[DataLoader, DataLoader, DataLoader]:
     train_ds = torch.load(train_ds_path, weights_only=False)
     val_ds = torch.load(val_ds_path, weights_only=False)
     test_ds = torch.load(test_ds_path, weights_only=False)

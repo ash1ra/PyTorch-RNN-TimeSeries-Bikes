@@ -9,18 +9,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 
 
-def mape_metric(preds, targets):
-    preds = np.exp(preds.detach().cpu().numpy())
-    targets = np.exp(targets.detach().cpu().numpy())
-    return np.mean(np.abs((targets - preds) / targets)) * 100
-
-
 def plot_preds_vs_targets(
     preds: list[np.ndarray], targets: list[np.ndarray], title: str
 ) -> None:
-    preds = np.exp(np.concatenate(preds))
-    targets = np.exp(np.concatenate(targets))
-
     plt.figure(figsize=(12, 6))
     plt.plot(preds, label="Predictions", color="red", alpha=0.7)
     plt.plot(targets, label="Targets", color="blue", alpha=0.7)
@@ -76,22 +67,28 @@ def train_step(
 
         preds = model(cat_inputs, num_inputs)
 
-        train_preds.append(preds.detach().cpu().numpy())
-        train_targets.append(targets.detach().cpu().numpy())
+        train_preds.append(preds.detach().cpu())
+        train_targets.append(targets.detach().cpu())
 
         loss = loss_fn(preds, targets)
 
         train_loss += loss.item()
-        train_metric += metric_fn(preds, targets)
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
     train_loss /= len(train_dl)
-    train_metric /= len(train_dl)
 
-    return train_loss, train_metric, train_preds, train_targets
+    train_preds = torch.cat(train_preds)
+    train_targets = torch.cat(train_targets)
+
+    # train_preds = torch.exp(torch.cat(train_preds))
+    # train_targets = torch.exp(torch.cat(train_targets))
+
+    train_metric = metric_fn(train_preds, train_targets).item()
+
+    return train_loss, train_metric, train_preds.numpy(), train_targets.numpy()
 
 
 def test_step(
@@ -117,18 +114,24 @@ def test_step(
 
             preds = model(cat_inputs, num_inputs)
 
-            test_preds.append(preds.detach().cpu().numpy())
-            test_targets.append(targets.detach().cpu().numpy())
+            test_preds.append(preds.detach().cpu())
+            test_targets.append(targets.detach().cpu())
 
             loss = loss_fn(preds, targets)
 
             test_loss += loss.item()
-            test_metric += metric_fn(preds, targets)
 
     test_loss /= len(test_dl)
-    test_metric /= len(test_dl)
 
-    return test_loss, test_metric, test_preds, test_targets
+    test_preds = torch.cat(test_preds)
+    test_targets = torch.cat(test_targets)
+
+    # test_preds = torch.exp(torch.cat(test_preds))
+    # test_targets = torch.exp(torch.cat(test_targets))
+
+    test_metric = metric_fn(test_preds, test_targets).item()
+
+    return test_loss, test_metric, test_preds.numpy(), test_targets.numpy()
 
 
 def train(
@@ -184,7 +187,7 @@ def train(
         scheduler.step(val_loss)
 
         print(
-            f"Epoch: {epoch} | Train loss: {train_loss:.2f} | Train {metric_fn.__name__}: {train_metric:.2f}% | Val loss: {val_loss:.2f} | Val {metric_fn.__name__}: {val_metric:.2f}%"
+            f"Epoch: {epoch} | Train loss: {train_loss:.2f} | Train {metric_fn.__name__}: {train_metric:.2f} | Val loss: {val_loss:.2f} | Val {metric_fn.__name__}: {val_metric:.2f}"
         )
 
         if val_loss < best_val_loss - min_delta:
@@ -224,7 +227,7 @@ def test(
     test_loss, test_metric, test_preds, test_targets = test_step(
         model, data_loader, loss_fn, metric_fn, device
     )
-    print(f"Test loss: {test_loss:.2f} | Test {metric_fn.__name__}: {test_metric:.2f}%")
+    print(f"Test loss: {test_loss:.2f} | Test {metric_fn.__name__}: {test_metric:.2f}")
 
     return {
         "loss": test_loss,
