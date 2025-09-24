@@ -90,7 +90,7 @@ cat_cols = [
     "season",
     "weather",
 ]
-num_cols = ["day", "temp", "feeling_temp", "hum", "windspeed"]
+num_cols = ["day", "temp", "feeling_temp", "hum", "windspeed", "casual", "registered"]
 
 train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 14)
 val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 14)

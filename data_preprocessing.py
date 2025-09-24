@@ -74,6 +74,8 @@ columns_to_export = [
     "feeling_temp",
     "hum",
     "windspeed",
+    "casual",
+    "registered",
     "count",
 ]
 

@@ -80,11 +80,11 @@ def train_step(
 
     train_loss /= len(train_dl)
 
-    train_preds = torch.cat(train_preds)
-    train_targets = torch.cat(train_targets)
+    # train_preds = torch.cat(train_preds)
+    # train_targets = torch.cat(train_targets)
 
-    # train_preds = torch.exp(torch.cat(train_preds))
-    # train_targets = torch.exp(torch.cat(train_targets))
+    train_preds = torch.exp(torch.cat(train_preds))
+    train_targets = torch.exp(torch.cat(train_targets))
 
     train_metric = metric_fn(train_preds, train_targets).item()
 
@@ -99,8 +99,7 @@ def test_step(
     device: str = "cpu",
 ) -> tuple[float, float, list, list]:
     test_loss, test_metric = 0, 0
-    test_preds = []
-    test_targets = []
+    test_preds, test_targets = [], []
 
     model.eval()
 
@@ -123,11 +122,11 @@ def test_step(
 
     test_loss /= len(test_dl)
 
-    test_preds = torch.cat(test_preds)
-    test_targets = torch.cat(test_targets)
+    # test_preds = torch.cat(test_preds)
+    # test_targets = torch.cat(test_targets)
 
-    # test_preds = torch.exp(torch.cat(test_preds))
-    # test_targets = torch.exp(torch.cat(test_targets))
+    test_preds = torch.exp(torch.cat(test_preds))
+    test_targets = torch.exp(torch.cat(test_targets))
 
     test_metric = metric_fn(test_preds, test_targets).item()
 

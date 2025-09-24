@@ -29,18 +29,17 @@ def main() -> None:
     cat_sizes = [2, 12, 7, 2, 2, 4, 3]
     rnn_model = RNNModel(
         cat_sizes,
-        embed_dim=8,
-        num_size=5,
-        hidden_size=64,
+        num_size=7,
+        hidden_size=32,
         output_size=1,
-        num_layers=2,
+        num_layers=1,
     ).to(device)
 
     loss_fn = nn.MSELoss()
-    optimizer = optim.Adam(rnn_model.parameters(), lr=0.001)
+    optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-4)
     epochs = 500
-    patience = 100
-    min_delta = 0.0
+    patience = 20
+    min_delta = 0.001
 
     train_results, val_results = train(
         rnn_model,
@@ -55,6 +54,8 @@ def main() -> None:
         device,
     )
 
+    test_results = test(rnn_model, test_dl, loss_fn, r2_score, device)
+
     plot_loss(train_results["loss"], val_results["loss"])
 
     plot_preds_vs_targets(
@@ -64,7 +65,6 @@ def main() -> None:
         val_results["preds"], val_results["targets"], "Validation preds vs targets"
     )
 
-    test_results = test(rnn_model, test_dl, loss_fn, r2_score, device)
     plot_preds_vs_targets(
         test_results["preds"], test_results["targets"], "Test preds vs targets"
     )
