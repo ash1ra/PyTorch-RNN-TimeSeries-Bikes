@@ -29,7 +29,7 @@ def main() -> None:
     cat_sizes = [2, 12, 7, 2, 2, 4, 3]
     rnn_model = RNNModel(
         cat_sizes,
-        num_size=7,
+        num_size=5,
         hidden_size=32,
         output_size=1,
         num_layers=1,

@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 path = Path("data")
 df = pd.read_csv(path / "data.csv")
@@ -74,8 +75,6 @@ columns_to_export = [
     "feeling_temp",
     "hum",
     "windspeed",
-    "casual",
-    "registered",
     "count",
 ]
 
