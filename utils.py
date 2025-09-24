@@ -9,6 +9,15 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 
 
+class RMSLELoss(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.mse = nn.MSELoss()
+
+    def forward(self, pred: torch.Tensor, actual: torch.Tensor) -> torch.Tensor:
+        return torch.sqrt(self.mse(pred, actual))
+
+
 def plot_preds_vs_targets(
     preds: list[np.ndarray], targets: list[np.ndarray], title: str
 ) -> None:

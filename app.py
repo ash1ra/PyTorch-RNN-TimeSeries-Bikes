@@ -6,7 +6,7 @@ from torchmetrics.functional import r2_score
 
 from data_loading import get_dataloaders
 from model import RNNModel
-from utils import plot_loss, plot_preds_vs_targets, test, train
+from utils import plot_loss, plot_preds_vs_targets, test, train, RMSLELoss
 
 
 def main() -> None:
@@ -35,7 +35,7 @@ def main() -> None:
         num_layers=1,
     ).to(device)
 
-    loss_fn = nn.MSELoss()
+    loss_fn = RMSLELoss()
     optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-4)
     epochs = 500
     patience = 20
