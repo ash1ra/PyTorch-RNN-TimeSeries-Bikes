@@ -1,12 +1,18 @@
 from pathlib import Path
 
 import torch
-from torch import nn, optim
+from torch import optim
+from torchinfo import summary
 from torchmetrics.functional import r2_score
 
-from data_loading import get_dataloaders
 from model import RNNModel
+
+# from data_loading import get_dataloaders
+from one_hot_data_loading import get_dataloaders
 from utils import RMSLELoss, plot_loss, plot_preds_vs_targets, test, train
+
+
+BATCH_SIZE = 32
 
 
 def main() -> None:
@@ -22,24 +28,26 @@ def main() -> None:
     test_ds_path = path / "test_ds.pt"
 
     train_dl, val_dl, test_dl = get_dataloaders(
-        train_ds_path, val_ds_path, test_ds_path, 32
+        train_ds_path, val_ds_path, test_ds_path, BATCH_SIZE
     )
 
-    # input_size = train_dl.dataset.data[0].size
-    cat_sizes = [2, 12, 31, 7, 2, 2, 4, 3]
+    input_size = 36
+    # cat_sizes = [2, 12, 31, 7, 2, 2, 4, 3]
+
     rnn_model = RNNModel(
-        cat_sizes,
-        num_size=4,
-        hidden_size=32,
+        # cat_sizes,
+        # num_size=4,
+        input_size=input_size,
+        hidden_size=64,
         output_size=1,
-        num_layers=1,
+        num_layers=2,
     ).to(device)
 
     loss_fn = RMSLELoss()
     optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-4)
     epochs = 500
-    patience = 20
-    min_delta = 0.001
+    patience = 50
+    min_delta = 0.0
 
     train_results, val_results = train(
         rnn_model,
@@ -55,6 +63,8 @@ def main() -> None:
     )
 
     test_results = test(rnn_model, test_dl, loss_fn, r2_score, device)
+
+    summary(rnn_model, input_size=(BATCH_SIZE, 14, 36))
 
     plot_loss(train_results["loss"], val_results["loss"])
 

@@ -39,13 +39,13 @@ def plot_loss(train_loss_list: list[float], val_loss_list: list[float]) -> None:
 
     axs[0].plot(epochs, train_loss_list, label="Train loss")
     axs[0].set_xlabel("Epochs")
-    axs[0].set_ylabel("Loss (MSE)")
+    axs[0].set_ylabel("Loss")
     axs[0].legend()
     axs[0].grid(True)
 
     axs[1].plot(epochs, val_loss_list, label="Validation loss")
     axs[1].set_xlabel("Epochs")
-    axs[1].set_ylabel("Loss (MSE)")
+    axs[1].set_ylabel("Loss")
     axs[1].legend()
     axs[1].grid(True)
 
@@ -67,14 +67,18 @@ def train_step(
 
     model.train()
 
-    for cat_inputs, num_inputs, targets in train_dl:
-        cat_inputs, num_inputs, targets = (
-            cat_inputs.to(device),
-            num_inputs.to(device),
-            targets.to(device),
-        )
+    # for cat_inputs, num_inputs, targets in train_dl:
+    #     cat_inputs, num_inputs, targets = (
+    #         cat_inputs.to(device),
+    #         num_inputs.to(device),
+    #         targets.to(device),
+    #     )
 
-        preds = model(cat_inputs, num_inputs)
+    for inputs, targets in train_dl:
+        inputs, targets = inputs.to(device), targets.to(device)
+
+        # preds = model(cat_inputs, num_inputs)
+        preds = model(inputs)
 
         train_preds.append(preds.detach().cpu())
         train_targets.append(targets.detach().cpu())
@@ -113,14 +117,18 @@ def test_step(
     model.eval()
 
     with torch.inference_mode():
-        for cat_inputs, num_inputs, targets in test_dl:
-            cat_inputs, num_inputs, targets = (
-                cat_inputs.to(device),
-                num_inputs.to(device),
-                targets.to(device),
-            )
+        # for cat_inputs, num_inputs, targets in test_dl:
+        #     cat_inputs, num_inputs, targets = (
+        #         cat_inputs.to(device),
+        #         num_inputs.to(device),
+        #         targets.to(device),
+        #     )
 
-            preds = model(cat_inputs, num_inputs)
+        for inputs, targets in test_dl:
+            inputs, targets = inputs.to(device), targets.to(device)
+
+            # preds = model(cat_inputs, num_inputs)
+            preds = model(inputs)
 
             test_preds.append(preds.detach().cpu())
             test_targets.append(targets.detach().cpu())
