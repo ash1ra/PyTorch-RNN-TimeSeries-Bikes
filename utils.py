@@ -110,6 +110,7 @@ def test_step(
     loss_fn: nn.Module,
     metric_fn: Callable,
     device: str = "cpu",
+    if_best_try: bool = False,
 ) -> tuple[float, float, list, list]:
     test_loss, test_metric = 0, 0
     test_preds, test_targets = [], []
@@ -139,13 +140,14 @@ def test_step(
 
     test_loss /= len(test_dl)
 
-    # test_preds = torch.cat(test_preds)
-    # test_targets = torch.cat(test_targets)
+    test_preds = torch.cat(test_preds)
+    test_targets = torch.cat(test_targets)
 
-    test_preds = torch.exp(torch.cat(test_preds))
-    test_targets = torch.exp(torch.cat(test_targets))
+    if not if_best_try:
+        test_preds = torch.exp(test_preds)
+        test_targets = torch.exp(test_targets)
 
-    test_metric = metric_fn(test_preds, test_targets).item()
+        test_metric = metric_fn(test_preds, test_targets).item()
 
     return test_loss, test_metric, test_preds.numpy(), test_targets.numpy()
 
@@ -224,10 +226,10 @@ def train(
     Path(temp_state_dict_path).unlink(missing_ok=True)
 
     _, _, train_results["preds"], train_results["targets"] = test_step(
-        model, train_dl, loss_fn, metric_fn, device
+        model, train_dl, loss_fn, metric_fn, device, True
     )
     _, _, val_results["preds"], val_results["targets"] = test_step(
-        model, val_dl, loss_fn, metric_fn, device
+        model, val_dl, loss_fn, metric_fn, device, True
     )
 
     return train_results, val_results
