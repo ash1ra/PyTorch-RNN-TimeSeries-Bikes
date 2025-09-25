@@ -26,7 +26,10 @@ df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
 df = df.sort_values("date")
 
 df["day"] = df["date"].dt.day
-df["day"] = df["day"] / df["day"].max()
+df["day"] = pd.Categorical(
+    df["day"], categories=[i for i in range(1, 32)], ordered=False
+)
+# df["day"] = df["day"] / df["day"].max()
 
 df["season"] = pd.Categorical(df["season"], categories=[1, 2, 3, 4], ordered=False)
 df["year"] = pd.Categorical(df["year"], categories=[0, 1], ordered=False)
@@ -42,6 +45,7 @@ df["is_working_day"] = pd.Categorical(
 )
 df["weather"] = pd.Categorical(df["weather"], categories=[1, 2, 3], ordered=False)
 
+df["day"] = df["day"].cat.codes
 df["season"] = df["season"].cat.codes
 df["year"] = df["year"].cat.codes
 df["month"] = df["month"].cat.codes

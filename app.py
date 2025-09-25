@@ -6,7 +6,7 @@ from torchmetrics.functional import r2_score
 
 from data_loading import get_dataloaders
 from model import RNNModel
-from utils import plot_loss, plot_preds_vs_targets, test, train, RMSLELoss
+from utils import RMSLELoss, plot_loss, plot_preds_vs_targets, test, train
 
 
 def main() -> None:
@@ -26,10 +26,10 @@ def main() -> None:
     )
 
     # input_size = train_dl.dataset.data[0].size
-    cat_sizes = [2, 12, 7, 2, 2, 4, 3]
+    cat_sizes = [2, 12, 31, 7, 2, 2, 4, 3]
     rnn_model = RNNModel(
         cat_sizes,
-        num_size=5,
+        num_size=4,
         hidden_size=32,
         output_size=1,
         num_layers=1,

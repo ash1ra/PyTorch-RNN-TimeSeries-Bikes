@@ -84,13 +84,14 @@ target_col = "count"
 cat_cols = [
     "year",
     "month",
+    "day",
     "day_of_week",
     "is_holiday",
     "is_working_day",
     "season",
     "weather",
 ]
-num_cols = ["day", "temp", "feeling_temp", "hum", "windspeed"]
+num_cols = ["temp", "feeling_temp", "hum", "windspeed"]
 
 train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 14)
 val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 14)
