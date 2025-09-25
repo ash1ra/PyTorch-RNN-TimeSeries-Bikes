@@ -38,9 +38,9 @@ def main() -> None:
         # cat_sizes,
         # num_size=4,
         input_size=input_size,
-        hidden_size=64,
+        hidden_size=16,
         output_size=1,
-        num_layers=2,
+        num_layers=1,
     ).to(device)
 
     loss_fn = RMSLELoss()

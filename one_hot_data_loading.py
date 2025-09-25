@@ -79,8 +79,8 @@ train_df, val_df, test_df = split_data(df)
 target_col = "count"
 feature_cols = [col for col in df.columns if col != target_col]
 
-train_ds = TimeSeriesDataset(train_df, target_col, feature_cols, 30)
-val_ds = TimeSeriesDataset(val_df, target_col, feature_cols, 30)
-test_ds = TimeSeriesDataset(test_df, target_col, feature_cols, 30)
+train_ds = TimeSeriesDataset(train_df, target_col, feature_cols, 14)
+val_ds = TimeSeriesDataset(val_df, target_col, feature_cols, 14)
+test_ds = TimeSeriesDataset(test_df, target_col, feature_cols, 14)
 
 save_datasets("data", train_ds, val_ds, test_ds)
