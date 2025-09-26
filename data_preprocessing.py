@@ -1,8 +1,9 @@
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 
 path = Path("data")
 df = pd.read_csv(path / "data.csv")
@@ -60,6 +61,23 @@ df.loc[df["date"] == pd.to_datetime("2012-10-29"), "count"] = (
     .loc[df["date"] == pd.to_datetime("2012-10-29")]
     .astype(int)
 )
+
+num_cols = [
+    "temp",
+    "feeling_temp",
+    "hum",
+    "windspeed",
+    "month_sin",
+    "month_cos",
+    "day_of_week_sin",
+    "day_of_week_cos",
+    # "count",
+]
+
+print(df[num_cols])
+scaler = StandardScaler()
+df[num_cols] = scaler.fit_transform(df[num_cols])
+print(df[num_cols])
 
 df["count"] = np.log(df["count"])
 
