@@ -59,22 +59,16 @@ df.loc[df["date"] == pd.to_datetime("2012-10-29"), "count"] = (
     .astype(int)
 )
 
-num_cols = [
-    "temp",
-    "hum",
-    "windspeed",
-    "hour_sin",
-    "hour_cos",
-    "month_sin",
-    "month_cos",
-    "day_of_week_sin",
-    "day_of_week_cos",
-]
+df["count"] = np.log(df["count"])
+
+cols_to_scale = ["temp", "hum", "windspeed", "count"]
 
 scaler = StandardScaler()
-df[num_cols] = scaler.fit_transform(df[num_cols])
+df[cols_to_scale] = scaler.fit_transform(df[cols_to_scale])
 
-df["count"] = np.log(df["count"])
+count_index = cols_to_scale.index("count")
+COUNT_MEAN = scaler.mean_[count_index]
+COUNT_STD = scaler.scale_[count_index]
 
 columns_to_export = [
     "year",

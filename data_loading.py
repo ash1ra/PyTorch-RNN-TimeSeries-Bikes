@@ -100,8 +100,8 @@ num_cols = [
     "windspeed",
 ]
 
-train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 14)
-val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 14)
-test_ds = TimeSeriesDataset(test_df, target_col, cat_cols, num_cols, 14)
+train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 24)
+val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 24)
+test_ds = TimeSeriesDataset(test_df, target_col, cat_cols, num_cols, 24)
 
 save_datasets("data", train_ds, val_ds, test_ds)

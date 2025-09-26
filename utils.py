@@ -8,14 +8,25 @@ from torch import nn, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 
+from data_preprocessing import COUNT_MEAN, COUNT_STD
 
-class RMSLELoss(nn.Module):
+
+class RMSELoss(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.mse = nn.MSELoss()
 
     def forward(self, pred: torch.Tensor, actual: torch.Tensor) -> torch.Tensor:
         return torch.sqrt(self.mse(pred, actual))
+
+
+def denormalize_and_exp(tensor: torch.Tensor) -> torch.Tensor:
+    mean_tensor = torch.tensor(COUNT_MEAN, dtype=tensor.dtype, device=tensor.device)
+    std_tensor = torch.tensor(COUNT_STD, dtype=tensor.dtype, device=tensor.device)
+
+    preds_log = tensor * std_tensor + mean_tensor
+
+    return torch.exp(preds_log)
 
 
 def plot_preds_vs_targets(
@@ -74,11 +85,10 @@ def train_step(
             targets.to(device),
         )
 
-        # for inputs, targets in train_dl:
-        #     inputs, targets = inputs.to(device), targets.to(device)
-
         preds = model(cat_inputs, num_inputs)
-        # preds = model(inputs)
+
+        preds = denormalize_and_exp(preds)
+        targets = denormalize_and_exp(targets)
 
         train_preds.append(preds.detach().cpu())
         train_targets.append(targets.detach().cpu())
@@ -93,11 +103,8 @@ def train_step(
 
     train_loss /= len(train_dl)
 
-    # train_preds = torch.cat(train_preds)
-    # train_targets = torch.cat(train_targets)
-
-    train_preds = torch.exp(torch.cat(train_preds))
-    train_targets = torch.exp(torch.cat(train_targets))
+    train_preds = torch.cat(train_preds)
+    train_targets = torch.cat(train_targets)
 
     train_metric = metric_fn(train_preds, train_targets).item()
 
@@ -110,7 +117,6 @@ def test_step(
     loss_fn: nn.Module,
     metric_fn: Callable,
     device: str = "cpu",
-    if_best_try: bool = False,
 ) -> tuple[float, float, list, list]:
     test_loss, test_metric = 0, 0
     test_preds, test_targets = [], []
@@ -125,11 +131,10 @@ def test_step(
                 targets.to(device),
             )
 
-            # for inputs, targets in test_dl:
-            #     inputs, targets = inputs.to(device), targets.to(device)
-
             preds = model(cat_inputs, num_inputs)
-            # preds = model(inputs)
+
+            preds = denormalize_and_exp(preds)
+            targets = denormalize_and_exp(targets)
 
             test_preds.append(preds.detach().cpu())
             test_targets.append(targets.detach().cpu())
@@ -143,11 +148,7 @@ def test_step(
     test_preds = torch.cat(test_preds)
     test_targets = torch.cat(test_targets)
 
-    if not if_best_try:
-        test_preds = torch.exp(test_preds)
-        test_targets = torch.exp(test_targets)
-
-        test_metric = metric_fn(test_preds, test_targets).item()
+    test_metric = metric_fn(test_preds, test_targets).item()
 
     return test_loss, test_metric, test_preds.numpy(), test_targets.numpy()
 
@@ -226,10 +227,10 @@ def train(
     Path(temp_state_dict_path).unlink(missing_ok=True)
 
     _, _, train_results["preds"], train_results["targets"] = test_step(
-        model, train_dl, loss_fn, metric_fn, device, True
+        model, train_dl, loss_fn, metric_fn, device
     )
     _, _, val_results["preds"], val_results["targets"] = test_step(
-        model, val_dl, loss_fn, metric_fn, device, True
+        model, val_dl, loss_fn, metric_fn, device
     )
 
     return train_results, val_results

@@ -9,7 +9,7 @@ from data_loading import get_dataloaders
 from model import RNNModel
 
 # from one_hot_data_loading import get_dataloaders
-from utils import RMSLELoss, plot_loss, plot_preds_vs_targets, test, train
+from utils import RMSELoss, plot_loss, plot_preds_vs_targets, test, train
 
 BATCH_SIZE = 32
 
@@ -42,7 +42,7 @@ def main() -> None:
         num_layers=1,
     ).to(device)
 
-    loss_fn = RMSLELoss()
+    loss_fn = RMSELoss()
     optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-4)
     epochs = 500
     patience = 20
@@ -63,7 +63,7 @@ def main() -> None:
 
     test_results = test(rnn_model, test_dl, loss_fn, r2_score, device)
 
-    # summary(rnn_model, input_size=(BATCH_SIZE, 14, 15))
+    # summary(rnn_model, input_size=(BATCH_SIZE, 24, 15))
 
     plot_loss(train_results["loss"], val_results["loss"])
 
