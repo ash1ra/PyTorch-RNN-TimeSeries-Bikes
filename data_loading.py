@@ -83,8 +83,6 @@ train_df, val_df, test_df = split_data(df)
 target_col = "count"
 cat_cols = [
     "year",
-    # "month",
-    # "day_of_week",
     "is_holiday",
     "is_working_day",
     "season",
@@ -97,7 +95,6 @@ num_cols = [
     "month_cos",
     "day_of_week_sin",
     "day_of_week_cos",
-    "temp",
     "feeling_temp",
     "hum",
     "windspeed",

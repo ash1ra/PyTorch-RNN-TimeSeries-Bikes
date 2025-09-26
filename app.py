@@ -35,7 +35,7 @@ def main() -> None:
 
     rnn_model = RNNModel(
         cat_sizes,
-        num_size=10,
+        num_size=9,
         # input_size=input_size,
         hidden_size=16,
         output_size=1,
