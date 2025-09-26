@@ -91,6 +91,8 @@ cat_cols = [
     "weather",
 ]
 num_cols = [
+    "hour_sin",
+    "hour_cos",
     "month_sin",
     "month_cos",
     "day_of_week_sin",

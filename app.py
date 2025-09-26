@@ -5,7 +5,7 @@ from torch import optim
 from torchinfo import summary
 from torchmetrics.functional import r2_score
 
-from hour_data_loading import get_dataloaders
+from data_loading import get_dataloaders
 from model import RNNModel
 
 # from one_hot_data_loading import get_dataloaders

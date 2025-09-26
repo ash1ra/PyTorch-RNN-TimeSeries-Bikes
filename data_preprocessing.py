@@ -6,13 +6,14 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
 path = Path("data")
-df = pd.read_csv(path / "data.csv")
+df = pd.read_csv(path / "hour.csv")
 
 df.rename(
     columns={
         "dteday": "date",
         "yr": "year",
         "mnth": "month",
+        "hr": "hour",
         "holiday": "is_holiday",
         "weekday": "day_of_week",
         "workingday": "is_working_day",
@@ -25,6 +26,9 @@ df.rename(
 
 df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
 df = df.sort_values("date")
+
+df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
 
 df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
 df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
@@ -44,7 +48,7 @@ df["is_holiday"] = pd.Categorical(df["is_holiday"], categories=[0, 1], ordered=F
 df["is_working_day"] = pd.Categorical(
     df["is_working_day"], categories=[0, 1], ordered=False
 )
-df["weather"] = pd.Categorical(df["weather"], categories=[1, 2, 3], ordered=False)
+df["weather"] = pd.Categorical(df["weather"], categories=[1, 2, 3, 4], ordered=False)
 
 df["season"] = df["season"].cat.codes
 df["year"] = df["year"].cat.codes
@@ -67,6 +71,8 @@ num_cols = [
     "feeling_temp",
     "hum",
     "windspeed",
+    "hour_sin",
+    "hour_cos",
     "month_sin",
     "month_cos",
     "day_of_week_sin",
@@ -74,15 +80,15 @@ num_cols = [
     # "count",
 ]
 
-print(df[num_cols])
 scaler = StandardScaler()
 df[num_cols] = scaler.fit_transform(df[num_cols])
-print(df[num_cols])
 
 df["count"] = np.log(df["count"])
 
 columns_to_export = [
     "year",
+    "hour_sin",
+    "hour_cos",
     # "month",
     "month_sin",
     "month_cos",

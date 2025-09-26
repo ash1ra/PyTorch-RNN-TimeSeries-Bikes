@@ -22,9 +22,9 @@ def plot_preds_vs_targets(
     preds: list[np.ndarray], targets: list[np.ndarray], title: str
 ) -> None:
     plt.figure(figsize=(12, 6))
-    plt.plot(preds, label="Predictions", color="red", alpha=0.7)
     plt.plot(targets, label="Targets", color="blue", alpha=0.7)
-    plt.xlabel("Days")
+    plt.plot(preds, label="Predictions", color="red", alpha=0.7)
+    plt.xlabel("Hours")
     plt.ylabel("Count")
     plt.title(title)
     plt.legend()
