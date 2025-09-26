@@ -5,7 +5,7 @@ from torch import optim
 from torchinfo import summary
 from torchmetrics.functional import r2_score
 
-from data_loading import get_dataloaders
+from hour_data_loading import get_dataloaders
 from model import RNNModel
 
 # from one_hot_data_loading import get_dataloaders
@@ -31,11 +31,11 @@ def main() -> None:
     )
 
     # input_size = 21
-    cat_sizes = [2, 2, 2, 4, 3]
+    cat_sizes = [2, 2, 2, 4, 4]
 
     rnn_model = RNNModel(
         cat_sizes,
-        num_size=8,
+        num_size=10,
         # input_size=input_size,
         hidden_size=16,
         output_size=1,
