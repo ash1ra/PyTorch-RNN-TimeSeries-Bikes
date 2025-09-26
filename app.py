@@ -5,12 +5,11 @@ from torch import optim
 from torchinfo import summary
 from torchmetrics.functional import r2_score
 
+from data_loading import get_dataloaders
 from model import RNNModel
 
-# from data_loading import get_dataloaders
-from one_hot_data_loading import get_dataloaders
+# from one_hot_data_loading import get_dataloaders
 from utils import RMSLELoss, plot_loss, plot_preds_vs_targets, test, train
-
 
 BATCH_SIZE = 32
 
@@ -31,13 +30,13 @@ def main() -> None:
         train_ds_path, val_ds_path, test_ds_path, BATCH_SIZE
     )
 
-    input_size = 36
-    # cat_sizes = [2, 12, 31, 7, 2, 2, 4, 3]
+    # input_size = 21
+    cat_sizes = [2, 2, 2, 4, 3]
 
     rnn_model = RNNModel(
-        # cat_sizes,
-        # num_size=4,
-        input_size=input_size,
+        cat_sizes,
+        num_size=8,
+        # input_size=input_size,
         hidden_size=16,
         output_size=1,
         num_layers=1,
@@ -46,7 +45,7 @@ def main() -> None:
     loss_fn = RMSLELoss()
     optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-4)
     epochs = 500
-    patience = 50
+    patience = 20
     min_delta = 0.0
 
     train_results, val_results = train(
@@ -64,7 +63,7 @@ def main() -> None:
 
     test_results = test(rnn_model, test_dl, loss_fn, r2_score, device)
 
-    summary(rnn_model, input_size=(BATCH_SIZE, 14, 36))
+    # summary(rnn_model, input_size=(BATCH_SIZE, 14, 15))
 
     plot_loss(train_results["loss"], val_results["loss"])
 

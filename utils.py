@@ -67,18 +67,18 @@ def train_step(
 
     model.train()
 
-    # for cat_inputs, num_inputs, targets in train_dl:
-    #     cat_inputs, num_inputs, targets = (
-    #         cat_inputs.to(device),
-    #         num_inputs.to(device),
-    #         targets.to(device),
-    #     )
+    for cat_inputs, num_inputs, targets in train_dl:
+        cat_inputs, num_inputs, targets = (
+            cat_inputs.to(device),
+            num_inputs.to(device),
+            targets.to(device),
+        )
 
-    for inputs, targets in train_dl:
-        inputs, targets = inputs.to(device), targets.to(device)
+        # for inputs, targets in train_dl:
+        #     inputs, targets = inputs.to(device), targets.to(device)
 
-        # preds = model(cat_inputs, num_inputs)
-        preds = model(inputs)
+        preds = model(cat_inputs, num_inputs)
+        # preds = model(inputs)
 
         train_preds.append(preds.detach().cpu())
         train_targets.append(targets.detach().cpu())
@@ -118,18 +118,18 @@ def test_step(
     model.eval()
 
     with torch.inference_mode():
-        # for cat_inputs, num_inputs, targets in test_dl:
-        #     cat_inputs, num_inputs, targets = (
-        #         cat_inputs.to(device),
-        #         num_inputs.to(device),
-        #         targets.to(device),
-        #     )
+        for cat_inputs, num_inputs, targets in test_dl:
+            cat_inputs, num_inputs, targets = (
+                cat_inputs.to(device),
+                num_inputs.to(device),
+                targets.to(device),
+            )
 
-        for inputs, targets in test_dl:
-            inputs, targets = inputs.to(device), targets.to(device)
+            # for inputs, targets in test_dl:
+            #     inputs, targets = inputs.to(device), targets.to(device)
 
-            # preds = model(cat_inputs, num_inputs)
-            preds = model(inputs)
+            preds = model(cat_inputs, num_inputs)
+            # preds = model(inputs)
 
             test_preds.append(preds.detach().cpu())
             test_targets.append(targets.detach().cpu())

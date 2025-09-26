@@ -83,15 +83,23 @@ train_df, val_df, test_df = split_data(df)
 target_col = "count"
 cat_cols = [
     "year",
-    "month",
-    "day",
-    "day_of_week",
+    # "month",
+    # "day_of_week",
     "is_holiday",
     "is_working_day",
     "season",
     "weather",
 ]
-num_cols = ["temp", "feeling_temp", "hum", "windspeed"]
+num_cols = [
+    "month_sin",
+    "month_cos",
+    "day_of_week_sin",
+    "day_of_week_cos",
+    "temp",
+    "feeling_temp",
+    "hum",
+    "windspeed",
+]
 
 train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 14)
 val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 14)
