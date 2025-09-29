@@ -11,12 +11,14 @@ class RNNModel(nn.Module):
         output_size: int,
         num_layers: int = 1,
         dropout: float = 0.0,
+        bidirectional: bool = False,
     ) -> None:
         super().__init__()
 
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.num_cats = len(cat_sizes)
+        self.num_dimensions = 2 if bidirectional else 1
 
         embed_dims = [min(50, (size + 1) // 2) for size in cat_sizes]
 
@@ -28,14 +30,15 @@ class RNNModel(nn.Module):
         )
         input_size = sum(embed_dims) + num_size
 
-        self.rnn = nn.RNN(
+        self.rnn = nn.LSTM(
             input_size=input_size,
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
             batch_first=True,
             dropout=dropout if num_layers > 1 else 0.0,
+            bidirectional=bidirectional,
         )
-        self.linear = nn.Linear(self.hidden_size, output_size)
+        self.linear = nn.Linear(self.hidden_size * self.num_dimensions, output_size)
 
     def forward(self, cat_x: torch.Tensor, num_x: torch.Tensor):
         embedded = [self.embeddings[i](cat_x[:, :, i]) for i in range(self.num_cats)]
@@ -43,11 +46,20 @@ class RNNModel(nn.Module):
         x = torch.cat([embedded_cat, num_x], dim=-1)
 
         device = x.device
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size, device=device)
-        # c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size, device=device)
+        h0 = torch.zeros(
+            self.num_layers * self.num_dimensions,
+            x.size(0),
+            self.hidden_size,
+            device=device,
+        )
+        c0 = torch.zeros(
+            self.num_layers * self.num_dimensions,
+            x.size(0),
+            self.hidden_size,
+            device=device,
+        )
 
-        out, _ = self.rnn(x, h0)
-        # out, _ = self.rnn(x, (h0, c0))
+        out, _ = self.rnn(x, (h0, c0))
         out = self.linear(out[:, -1, :]).squeeze(1)
 
         return out

@@ -1,10 +1,12 @@
 from pathlib import Path
 
-import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from pandas.plotting import autocorrelation_plot
 from sklearn.preprocessing import StandardScaler
+
 
 path = Path("data")
 df = pd.read_csv(path / "hour.csv")
@@ -51,17 +53,29 @@ df["is_holiday"] = df["is_holiday"].cat.codes
 df["is_working_day"] = df["is_working_day"].cat.codes
 df["weather"] = df["weather"].cat.codes
 
-df.loc[df["date"] == pd.to_datetime("2012-10-29"), "count"] = (
-    df["count"]
-    .rolling(window=2, center=True)
-    .mean()
-    .loc[df["date"] == pd.to_datetime("2012-10-29")]
-    .astype(int)
-)
+# df.loc[df["date"] == pd.to_datetime("2012-10-29"), "count"] = (
+#     df["count"]
+#     .rolling(window=2, center=True)
+#     .mean()
+#     .loc[df["date"] == pd.to_datetime("2012-10-29")]
+#     .astype(int)
+# )
+
 
 df["count"] = np.log(df["count"])
 
-cols_to_scale = ["temp", "hum", "windspeed", "count"]
+df["count_lag_1"] = df["count"].shift(1)
+# df["count_lag_24"] = df["count"].shift(24)
+df = df.dropna()
+
+cols_to_scale = [
+    "temp",
+    "hum",
+    "windspeed",
+    "count",
+    "count_lag_1",
+    # "count_lag_24",
+]
 
 scaler = StandardScaler()
 df[cols_to_scale] = scaler.fit_transform(df[cols_to_scale])
@@ -85,8 +99,13 @@ columns_to_export = [
     "feeling_temp",
     "hum",
     "windspeed",
+    "count_lag_1",
+    # "count_lag_24",
     "count",
 ]
+
+# autocorrelation_plot(df["count"][:50])
+# plt.show()
 
 # corr_matrix = df[columns_to_export].corr(method="pearson")
 # sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", vmin=-1, vmax=1)

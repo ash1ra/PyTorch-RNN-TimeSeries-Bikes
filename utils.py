@@ -177,7 +177,7 @@ def train(
         "preds": [],
         "targets": [],
     }
-    best_val_loss = float("inf")
+    best_val_loss, best_val_metric = float("inf"), float("inf")
     patience_counter = 0
     temp_state_dict_path = Path("data/temp_best_state_dict.pt")
 
@@ -185,8 +185,8 @@ def train(
         optimizer,
         mode="min",
         factor=0.5,
-        patience=50,
-        min_lr=1e-6,
+        patience=5,
+        min_lr=1e-4,
     )
 
     for epoch in range(1, epochs + 1):
@@ -206,11 +206,12 @@ def train(
         scheduler.step(val_loss)
 
         print(
-            f"Epoch: {epoch} | Train loss: {train_loss:.2f} | Train {metric_fn.__name__}: {train_metric:.2f} | Val loss: {val_loss:.2f} | Val {metric_fn.__name__}: {val_metric:.2f}"
+            f"Epoch: {epoch} | Train loss: {train_loss:.2f} | Train {metric_fn.__name__}: {train_metric:.2f} | Val loss: {val_loss:.2f} | Val {metric_fn.__name__}: {val_metric:.2f} | LR: {scheduler.get_last_lr()[0]}"
         )
 
         if val_loss < best_val_loss - min_delta:
             best_val_loss = val_loss
+            best_val_metric = val_metric
             torch.save(model.state_dict(), temp_state_dict_path)
             patience_counter = 0
         else:
@@ -221,8 +222,12 @@ def train(
             break
 
     if best_val_loss < val_loss:
-        model.load_state_dict(torch.load(temp_state_dict_path, map_location=device))
-        print(f"Loaded best model parameters with val_loss={best_val_loss:.4f}")
+        model.load_state_dict(
+            torch.load(temp_state_dict_path, map_location=device, weights_only=True)
+        )
+        print(
+            f"Loaded best model parameters with val loss: {best_val_loss:.4f} and val metric: {best_val_metric:.4f}"
+        )
 
     Path(temp_state_dict_path).unlink(missing_ok=True)
 

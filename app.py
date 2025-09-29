@@ -7,11 +7,9 @@ from torchmetrics.functional import r2_score
 
 from data_loading import get_dataloaders
 from model import RNNModel
-
-# from one_hot_data_loading import get_dataloaders
 from utils import RMSELoss, plot_loss, plot_preds_vs_targets, test, train
 
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 
 
 def main() -> None:
@@ -30,20 +28,20 @@ def main() -> None:
         train_ds_path, val_ds_path, test_ds_path, BATCH_SIZE
     )
 
-    # input_size = 21
     cat_sizes = [2, 2, 2, 4, 4]
 
     rnn_model = RNNModel(
         cat_sizes,
-        num_size=9,
-        # input_size=input_size,
-        hidden_size=16,
+        num_size=10,
+        hidden_size=64,
         output_size=1,
-        num_layers=1,
+        num_layers=3,
+        dropout=0.2,
+        bidirectional=True,
     ).to(device)
 
     loss_fn = RMSELoss()
-    optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-4)
+    optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-5)
     epochs = 500
     patience = 20
     min_delta = 0.0

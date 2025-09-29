@@ -98,10 +98,12 @@ num_cols = [
     "feeling_temp",
     "hum",
     "windspeed",
+    "count_lag_1",
+    # "count_lag_24",
 ]
 
-train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 24)
-val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 24)
-test_ds = TimeSeriesDataset(test_df, target_col, cat_cols, num_cols, 24)
+train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 48)
+val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 48)
+test_ds = TimeSeriesDataset(test_df, target_col, cat_cols, num_cols, 48)
 
 save_datasets("data", train_ds, val_ds, test_ds)
