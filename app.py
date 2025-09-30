@@ -1,13 +1,13 @@
 from pathlib import Path
 
 import torch
-from torch import optim
+from torch import nn, optim
 from torchinfo import summary
 from torchmetrics.functional import r2_score
 
 from data_loading import get_dataloaders
 from model import RNNModel
-from utils import RMSELoss, plot_loss, plot_preds_vs_targets, test, train
+from utils import plot_loss, plot_preds_vs_targets, test, train
 
 BATCH_SIZE = 16
 
@@ -36,11 +36,11 @@ def main() -> None:
         hidden_size=64,
         output_size=1,
         num_layers=2,
-        dropout=0.2,
+        dropout=0.3,
         bidirectional=False,
     ).to(device)
 
-    loss_fn = RMSELoss()
+    loss_fn = nn.L1Loss()
     optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-3)
     epochs = 500
     patience = 20

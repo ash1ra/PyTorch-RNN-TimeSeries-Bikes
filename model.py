@@ -20,7 +20,7 @@ class RNNModel(nn.Module):
         self.num_cats = len(cat_sizes)
         self.num_dimensions = 2 if bidirectional else 1
 
-        embed_dims = [min(50, (size + 1) // 2) for size in cat_sizes]
+        embed_dims = [min(15, (size + 1) // 2) for size in cat_sizes]
 
         self.embeddings = nn.ModuleList(
             [
