@@ -32,19 +32,24 @@ def main() -> None:
 
     rnn_model = RNNModel(
         cat_sizes,
-        num_size=10,
+        num_size=12,
         hidden_size=64,
         output_size=1,
-        num_layers=3,
+        num_layers=2,
         dropout=0.2,
-        bidirectional=True,
+        bidirectional=False,
     ).to(device)
 
     loss_fn = RMSELoss()
-    optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-5)
+    optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-3)
     epochs = 500
     patience = 20
     min_delta = 0.0
+
+    cat_x = torch.zeros((BATCH_SIZE, 72, 5), dtype=torch.int64, device=device)
+    num_x = torch.zeros((BATCH_SIZE, 72, 12), dtype=torch.float32, device=device)
+
+    summary(rnn_model, input_data=[cat_x, num_x])
 
     train_results, val_results = train(
         rnn_model,
@@ -60,8 +65,6 @@ def main() -> None:
     )
 
     test_results = test(rnn_model, test_dl, loss_fn, r2_score, device)
-
-    # summary(rnn_model, input_size=(BATCH_SIZE, 24, 15))
 
     plot_loss(train_results["loss"], val_results["loss"])
 

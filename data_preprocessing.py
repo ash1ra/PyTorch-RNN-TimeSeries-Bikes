@@ -61,11 +61,12 @@ df["weather"] = df["weather"].cat.codes
 #     .astype(int)
 # )
 
-
 df["count"] = np.log(df["count"])
 
 df["count_lag_1"] = df["count"].shift(1)
-# df["count_lag_24"] = df["count"].shift(24)
+df["count_lag_24"] = df["count"].shift(24)
+df["count_lag_168"] = df["count"].shift(168)
+
 df = df.dropna()
 
 cols_to_scale = [
@@ -74,7 +75,8 @@ cols_to_scale = [
     "windspeed",
     "count",
     "count_lag_1",
-    # "count_lag_24",
+    "count_lag_24",
+    "count_lag_168",
 ]
 
 scaler = StandardScaler()
@@ -100,7 +102,8 @@ columns_to_export = [
     "hum",
     "windspeed",
     "count_lag_1",
-    # "count_lag_24",
+    "count_lag_24",
+    "count_lag_168",
     "count",
 ]
 

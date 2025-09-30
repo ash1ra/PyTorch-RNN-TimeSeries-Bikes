@@ -1,9 +1,9 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
-import numpy as np
 
 TRAIN_RATIO = 0.7
 VAL_RATIO = 0.15
@@ -99,11 +99,12 @@ num_cols = [
     "hum",
     "windspeed",
     "count_lag_1",
-    # "count_lag_24",
+    "count_lag_24",
+    "count_lag_168",
 ]
 
-train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 48)
-val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 48)
-test_ds = TimeSeriesDataset(test_df, target_col, cat_cols, num_cols, 48)
+train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 96)
+val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 96)
+test_ds = TimeSeriesDataset(test_df, target_col, cat_cols, num_cols, 96)
 
 save_datasets("data", train_ds, val_ds, test_ds)

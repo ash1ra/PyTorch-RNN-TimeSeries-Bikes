@@ -87,15 +87,15 @@ def train_step(
 
         preds = model(cat_inputs, num_inputs)
 
+        loss = loss_fn(preds, targets)
+
+        train_loss += loss.item()
+
         preds = denormalize_and_exp(preds)
         targets = denormalize_and_exp(targets)
 
         train_preds.append(preds.detach().cpu())
         train_targets.append(targets.detach().cpu())
-
-        loss = loss_fn(preds, targets)
-
-        train_loss += loss.item()
 
         optimizer.zero_grad()
         loss.backward()
@@ -133,15 +133,15 @@ def test_step(
 
             preds = model(cat_inputs, num_inputs)
 
+            loss = loss_fn(preds, targets)
+
+            test_loss += loss.item()
+
             preds = denormalize_and_exp(preds)
             targets = denormalize_and_exp(targets)
 
             test_preds.append(preds.detach().cpu())
             test_targets.append(targets.detach().cpu())
-
-            loss = loss_fn(preds, targets)
-
-            test_loss += loss.item()
 
     test_loss /= len(test_dl)
 
