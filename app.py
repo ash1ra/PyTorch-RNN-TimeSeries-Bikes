@@ -1,13 +1,13 @@
 from pathlib import Path
 
 import torch
-from torch import nn, optim
+from torch import optim
 from torchinfo import summary
 from torchmetrics.functional import r2_score
 
 from data_loading import get_dataloaders
 from model import RNNModel
-from utils import plot_loss, plot_preds_vs_targets, test, train
+from utils import RMSELoss, plot_loss, plot_preds_vs_targets, test, train
 
 BATCH_SIZE = 16
 
@@ -20,12 +20,11 @@ def main() -> None:
 
     path = Path("data")
 
-    train_ds_path = path / "train_ds.pt"
-    val_ds_path = path / "val_ds.pt"
-    test_ds_path = path / "test_ds.pt"
-
     train_dl, val_dl, test_dl = get_dataloaders(
-        train_ds_path, val_ds_path, test_ds_path, BATCH_SIZE
+        path / "train_dataset",
+        path / "val_dataset",
+        path / "test_dataset",
+        BATCH_SIZE,
     )
 
     cat_sizes = [2, 2, 2, 4, 4]
@@ -40,14 +39,14 @@ def main() -> None:
         bidirectional=False,
     ).to(device)
 
-    loss_fn = nn.L1Loss()
+    loss_fn = RMSELoss()
     optimizer = optim.Adam(rnn_model.parameters(), lr=0.001, weight_decay=1e-3)
     epochs = 500
     patience = 20
     min_delta = 0.0
 
-    cat_x = torch.zeros((BATCH_SIZE, 72, 5), dtype=torch.int64, device=device)
-    num_x = torch.zeros((BATCH_SIZE, 72, 12), dtype=torch.float32, device=device)
+    cat_x = torch.zeros((BATCH_SIZE, 96, 5), dtype=torch.int64, device=device)
+    num_x = torch.zeros((BATCH_SIZE, 96, 12), dtype=torch.float32, device=device)
 
     summary(rnn_model, input_data=[cat_x, num_x])
 

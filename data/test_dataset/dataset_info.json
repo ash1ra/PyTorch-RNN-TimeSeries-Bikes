@@ -1,0 +1,80 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "year": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "is_holiday": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "is_working_day": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "season": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "weather": {
+      "dtype": "int64",
+      "_type": "Value"
+    },
+    "hour_sin": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "hour_cos": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "month_sin": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "month_cos": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "day_of_week_sin": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "day_of_week_cos": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "feeling_temp": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "hum": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "windspeed": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "count_lag_1": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "count_lag_24": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "count_lag_168": {
+      "dtype": "float32",
+      "_type": "Value"
+    },
+    "count": {
+      "dtype": "float32",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": ""
+}

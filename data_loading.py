@@ -3,13 +3,39 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader, Dataset
+from datasets import Dataset, load_from_disk
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset as TorchDataset
 
 TRAIN_RATIO = 0.7
 VAL_RATIO = 0.15
 
+SEQ_LENGTH = 96
+TARGET_COL = "count"
+CAT_COLS = [
+    "year",
+    "is_holiday",
+    "is_working_day",
+    "season",
+    "weather",
+]
+NUM_COLS = [
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "day_of_week_sin",
+    "day_of_week_cos",
+    "feeling_temp",
+    "hum",
+    "windspeed",
+    "count_lag_1",
+    "count_lag_24",
+    "count_lag_168",
+]
 
-class TimeSeriesDataset(Dataset):
+
+class TimeSeriesDataset(TorchDataset):
     def __init__(
         self,
         data: pd.DataFrame,
@@ -22,6 +48,9 @@ class TimeSeriesDataset(Dataset):
         self.num_data = data[num_cols].values.astype(np.float32)
         self.targets = data[target_col].values.astype(np.float32)
         self.seq_length = seq_length
+        self.cat_cols = cat_cols
+        self.num_cols = num_cols
+        self.target_col = target_col
 
     def __len__(self) -> int:
         return len(self.num_data) - self.seq_length
@@ -48,63 +77,61 @@ def split_data(data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataF
     )
 
 
+def create_dataframe(ds: TimeSeriesDataset) -> pd.DataFrame:
+    cat_dict = {col: ds.cat_data[:, i] for i, col in enumerate(ds.cat_cols)}
+    num_dict = {col: ds.num_data[:, i] for i, col in enumerate(ds.num_cols)}
+    data_dict = {**cat_dict, **num_dict, ds.target_col: ds.targets}
+
+    return pd.DataFrame(data_dict)
+
+
 def save_datasets(
     output_dir: str,
-    train_ds: Dataset,
-    val_ds: Dataset,
-    test_ds: Dataset,
+    train_ds: TimeSeriesDataset,
+    val_ds: TimeSeriesDataset,
+    test_ds: TimeSeriesDataset,
 ) -> None:
     output_path = Path(output_dir)
+    output_path.mkdir(exist_ok=True)
 
-    torch.save(train_ds, output_path / "train_ds.pt")
-    torch.save(val_ds, output_path / "val_ds.pt")
-    torch.save(test_ds, output_path / "test_ds.pt")
+    train_df = create_dataframe(train_ds)
+    val_df = create_dataframe(val_ds)
+    test_df = create_dataframe(test_ds)
+
+    Dataset.from_pandas(train_df).save_to_disk(output_path / "train_dataset")
+    Dataset.from_pandas(val_df).save_to_disk(output_path / "val_dataset")
+    Dataset.from_pandas(test_df).save_to_disk(output_path / "test_dataset")
 
 
 def get_dataloaders(
-    train_ds_path, val_ds_path, test_ds_path, batch_size
+    train_ds_path: Path,
+    val_ds_path: Path,
+    test_ds_path: Path,
+    batch_size: int,
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
-    train_ds = torch.load(train_ds_path, weights_only=False)
-    val_ds = torch.load(val_ds_path, weights_only=False)
-    test_ds = torch.load(test_ds_path, weights_only=False)
+    train_df = load_from_disk(train_ds_path).to_pandas()
+    val_df = load_from_disk(val_ds_path).to_pandas()
+    test_df = load_from_disk(test_ds_path).to_pandas()
+
+    train_ds = TimeSeriesDataset(train_df, TARGET_COL, CAT_COLS, NUM_COLS, SEQ_LENGTH)
+    val_ds = TimeSeriesDataset(val_df, TARGET_COL, CAT_COLS, NUM_COLS, SEQ_LENGTH)
+    test_ds = TimeSeriesDataset(test_df, TARGET_COL, CAT_COLS, NUM_COLS, SEQ_LENGTH)
 
     return (
-        DataLoader(train_ds, batch_size=batch_size, shuffle=False),
-        DataLoader(val_ds, batch_size=batch_size, shuffle=False),
-        DataLoader(test_ds, batch_size=batch_size, shuffle=False),
+        DataLoader(train_ds, batch_size=batch_size, shuffle=False, num_workers=2),
+        DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=2),
+        DataLoader(test_ds, batch_size=batch_size, shuffle=False, num_workers=2),
     )
 
 
-path = Path("data")
-df = pd.read_csv(path / "processed_data.csv")
+if __name__ == "__main__":
+    path = Path("data")
+    df = pd.read_csv(path / "processed_data.csv")
 
-train_df, val_df, test_df = split_data(df)
+    train_df, val_df, test_df = split_data(df)
 
-target_col = "count"
-cat_cols = [
-    "year",
-    "is_holiday",
-    "is_working_day",
-    "season",
-    "weather",
-]
-num_cols = [
-    "hour_sin",
-    "hour_cos",
-    "month_sin",
-    "month_cos",
-    "day_of_week_sin",
-    "day_of_week_cos",
-    "feeling_temp",
-    "hum",
-    "windspeed",
-    "count_lag_1",
-    "count_lag_24",
-    "count_lag_168",
-]
+    train_ds = TimeSeriesDataset(train_df, TARGET_COL, CAT_COLS, NUM_COLS, SEQ_LENGTH)
+    val_ds = TimeSeriesDataset(val_df, TARGET_COL, CAT_COLS, NUM_COLS, SEQ_LENGTH)
+    test_ds = TimeSeriesDataset(test_df, TARGET_COL, CAT_COLS, NUM_COLS, SEQ_LENGTH)
 
-train_ds = TimeSeriesDataset(train_df, target_col, cat_cols, num_cols, 96)
-val_ds = TimeSeriesDataset(val_df, target_col, cat_cols, num_cols, 96)
-test_ds = TimeSeriesDataset(test_df, target_col, cat_cols, num_cols, 96)
-
-save_datasets("data", train_ds, val_ds, test_ds)
+    save_datasets("data", train_ds, val_ds, test_ds)

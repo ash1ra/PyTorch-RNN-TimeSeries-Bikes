@@ -4,6 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from safetensors.torch import load_file, save_file
 from torch import nn, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
@@ -179,7 +180,8 @@ def train(
     }
     best_val_loss, best_val_metric = float("inf"), float("inf")
     patience_counter = 0
-    temp_state_dict_path = Path("data/temp_best_state_dict.pt")
+    temp_state_dict_path = Path("data/temp_best_state_dict.safetensors")
+    final_model_path = Path("data/best_model.safetensors")
 
     scheduler = ReduceLROnPlateau(
         optimizer,
@@ -212,7 +214,7 @@ def train(
         if val_loss < best_val_loss - min_delta:
             best_val_loss = val_loss
             best_val_metric = val_metric
-            torch.save(model.state_dict(), temp_state_dict_path)
+            save_file(model.state_dict(), temp_state_dict_path)
             patience_counter = 0
         else:
             patience_counter += 1
@@ -222,9 +224,8 @@ def train(
             break
 
     if best_val_loss < val_loss:
-        model.load_state_dict(
-            torch.load(temp_state_dict_path, map_location=device, weights_only=True)
-        )
+        model.load_state_dict(load_file(temp_state_dict_path, device=device))
+        save_file(model.state_dict(), final_model_path)
         print(
             f"Loaded best model parameters with val loss: {best_val_loss:.4f} and val metric: {best_val_metric:.4f}"
         )
