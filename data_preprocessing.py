@@ -7,7 +7,6 @@ import seaborn as sns
 from pandas.plotting import autocorrelation_plot
 from sklearn.preprocessing import StandardScaler
 
-
 path = Path("data")
 df = pd.read_csv(path / "hour.csv")
 
@@ -52,14 +51,6 @@ df["year"] = df["year"].cat.codes
 df["is_holiday"] = df["is_holiday"].cat.codes
 df["is_working_day"] = df["is_working_day"].cat.codes
 df["weather"] = df["weather"].cat.codes
-
-# df.loc[df["date"] == pd.to_datetime("2012-10-29"), "count"] = (
-#     df["count"]
-#     .rolling(window=2, center=True)
-#     .mean()
-#     .loc[df["date"] == pd.to_datetime("2012-10-29")]
-#     .astype(int)
-# )
 
 df["count"] = np.log(df["count"])
 
